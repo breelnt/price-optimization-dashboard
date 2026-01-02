@@ -13,19 +13,19 @@ def load_data(file_source):
         return pd.read_csv("fashion_boutique_dataset.csv")
     elif file_source == "Tech Sales (Placeholder)":
         return pd.DataFrame({
-            "category": ["Electronics", "Electronics"],
-            "item": ["Laptop", "Tablet"], 
-            "current_price": [1200, 600], 
-            "markdown_percentage": [5, 10], 
-            "is_returned": [False, True]
+            "category": ["Electronics", "Electronics", "Mobile"],
+            "item": ["Laptop", "Tablet", "Phone"], 
+            "current_price": [1200, 600, 800], 
+            "markdown_percentage": [5, 10, 0], 
+            "is_returned": [False, True, False]
         })
     elif file_source == "Grocery Data (Placeholder)":
         return pd.DataFrame({
-            "category": ["Produce", "Produce"],
-            "item": ["Apple", "Orange"], 
-            "current_price": [2, 3], 
-            "markdown_percentage": [0, 20], 
-            "is_returned": [False, False]
+            "category": ["Produce", "Produce", "Dairy"],
+            "item": ["Apple", "Orange", "Milk"], 
+            "current_price": [2, 3, 4], 
+            "markdown_percentage": [0, 20, 0], 
+            "is_returned": [False, False, False]
         })
     else:
         return pd.read_csv(file_source)
@@ -54,10 +54,8 @@ if 'is_returned' in df.columns:
 st.markdown("# REVENUE AND PRICE OPTIMIZATION STRATEGY")
 st.markdown("---")
 
-# Instruction Text
 st.markdown("Adjust the **Price Slider** to test different scenarios and view the impact on revenue in the summary below.")
 
-# Technical Bullets
 st.markdown("""
 * **Price Sensitivity:** Analyzes how customer demand shifts when you change your prices.
 * **Revenue Simulation:** Manually test pricing scenarios to see predicted sales volume and revenue impact.
@@ -76,33 +74,39 @@ if 'current_price' in df.columns:
 st.markdown("---")
 st.markdown("### **PRICE ELASTICITY SIMULATOR**")
 
-# Define the elasticity (sensitivity) and calculate the mathematical peak
 elasticity = -1.6 
 optimal_p = round(-50 * (1 + elasticity) / elasticity, 2)
 
-# Sync: Initialize slider value in session state
-if 'price_slider' not in st.session_state:
-    st.session_state.price_slider = 0.0
+# --- SESSION STATE FIX ---
+# Initialize the slider value in session state so the button can change it
+if 'current_slider_val' not in st.session_state:
+    st.session_state.current_slider_val = 0.0
 
 col_sim1, col_sim2 = st.columns([1, 2])
 
 with col_sim1:
     st.markdown("**SIMULATION CONTROLS**")
     
-    # THE SLIDER
+    # THE SLIDER (Note: value is linked to session state)
     price_change = st.slider(
         "Target Price Adjustment (%)", 
         min_value=-50.0, 
         max_value=50.0, 
         step=0.5,
-        key="price_slider"
+        value=st.session_state.current_slider_val
     )
+    
+    # Keep session state in sync with manual slides
+    st.session_state.current_slider_val = price_change
 
     st.markdown("---")
 
     # THE OPTIMIZATION BUTTON
     if st.button("RUN REVENUE OPTIMIZATION"):
-        st.session_state.price_slider = optimal_p
+        # Update the session state value
+        st.session_state.current_slider_val = optimal_p
+        # Force a rerun to move the slider visually
+        st.rerun()
 
     st.caption(f"""
     **STRATEGIC OPTIMIZATION:** Click the button above to automatically align the slider with the 
@@ -123,19 +127,17 @@ with col_sim1:
         risk_msg = "Deep discounts historically increase returns due to impulse buying."
 
 with col_sim2:
-    # EXECUTIVE IMPACT SUMMARY
     st.markdown("**EXECUTIVE IMPACT SUMMARY**")
     
     direction = "increase" if demand_impact > 0 else "decrease"
     change_type = "extra" if revenue_delta >= 0 else "loss of"
     
-    # The Dynamic Summary Sentence
+    # DYNAMIC ONE-SENTENCE SUMMARY
     st.info(f"""
     **ONE-SENTENCE SUMMARY (Updates with slider):** By adjusting our price by **{price_change}%**, we expect sales volume to **{direction}** by **{abs(demand_impact * 100):.1f}%**, 
     resulting in a total revenue of **${new_revenue:,.2f}** (a **{change_type} ${abs(revenue_delta):,.2f}** vs. current).
     """)
 
-    # Supporting Data Points
     st.markdown(f"""
     * **Target Price Change:** `{price_change}%`
     * **Predicted Volume Shift:** `{ (demand_impact * 100):.1f}%`
@@ -151,7 +153,6 @@ with col_sim2:
                         labels={'x': 'Price Change %', 'y': 'Revenue ($)'}, 
                         title="REVENUE OPTIMIZATION CURVE")
     
-    # Visual Indicators on Graph
     fig_curve.add_vline(x=price_change, line_dash="dash", line_color="red", annotation_text="Selection")
     fig_curve.add_vline(x=optimal_p, line_dash="dot", line_color="green", annotation_text="Peak")
     st.plotly_chart(fig_curve, use_container_width=True)
@@ -167,10 +168,7 @@ st.markdown("""
 * **What to look for:** If the 'True' boxes sit higher on the chart than the 'False' boxes, it shows that deep discounts are causing higher return rates for that specific product group.
 """)
 
-
-
 if 'is_returned' in df.columns and 'category' in df.columns:
-    # Logic to find the highest return category
     return_rate = (df['is_returned'].sum() / len(df)) * 100
     cat_returns = df.groupby('category')['is_returned'].mean().sort_values(ascending=False)
     top_cat = cat_returns.index[0]
