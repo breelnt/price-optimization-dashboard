@@ -44,10 +44,11 @@ st.markdown("---")
 
 st.markdown("""
 **DASHBOARD GUIDE**
+* **How to use:** Adjust the **Price Slider** to test scenarios, then check the **Executive Summary** to see how that change impacts your bottom line.
 * **Price Sensitivity:** Analyzes how customer demand shifts when you change your prices.
-* **Revenue Simulation:** Use the **Slider** to manually test different pricing scenarios and see predicted sales impact.
-* **Auto-Optimization:** Use the **Optimization Button** to instantly find the price point that maximizes your total revenue.
-* **Return Analysis:** Monitors if deep discounting is causing an increase in product returns.
+* **Revenue Simulation:** Manually test pricing scenarios to see predicted sales volume and revenue impact.
+* **Revenue Maximization:** Uses a quadratic formula ($Price \\times Volume$) to identify the mathematical peak where profit and volume are perfectly balanced.
+* **Return Analysis:** Monitors if deep discounting is accidentally driving up your return rates.
 """)
 
 # Key Metrics Display
@@ -74,16 +75,6 @@ col_sim1, col_sim2 = st.columns([1, 2])
 with col_sim1:
     st.markdown("**SIMULATION CONTROLS**")
     
-    # THE OPTIMIZATION BUTTON
-    if st.button("SHOW OPTIMIZED PRICE"):
-        st.session_state.price_slider = optimal_p
-
-    st.caption(f"""
-    **INSTANT OPTIMIZATION:** * This automatically sets the slider to the exact price point where your volume and profit are perfectly balanced.
-    * **Revenue Maximization:** The formula identifies the peak of your revenue curve based on current market sensitivity.
-    * **Manual Exploration:** Alternatively, use the slider to test specific strategic discounts or seasonal price hikes.
-    """)
-
     # THE SLIDER
     price_change = st.slider(
         "Target Price Adjustment (%)", 
@@ -92,6 +83,18 @@ with col_sim1:
         step=0.5,
         key="price_slider"
     )
+
+    st.markdown("---")
+
+    # THE OPTIMIZATION BUTTON
+    if st.button("RUN REVENUE OPTIMIZATION"):
+        st.session_state.price_slider = optimal_p
+
+    st.caption(f"""
+    **STRATEGIC OPTIMIZATION:** Click the button above to instantly align the slider with the **{optimal_p}%** price point. 
+    This identifies the equilibrium where price changes are perfectly balanced against potential volume loss, 
+    resulting in maximum total revenue.
+    """)
     
     # Impact Calculations
     demand_impact = (price_change * elasticity) / 100
@@ -108,7 +111,6 @@ with col_sim1:
 with col_sim2:
     # EXECUTIVE IMPACT SUMMARY
     diff_symbol = "+" if revenue_delta >= 0 else ""
-    is_optimized = "STATUS: OPTIMIZED" if abs(price_change - optimal_p) < 1 else "STATUS: SUB-OPTIMAL"
 
     st.markdown(f"""
     **EXECUTIVE IMPACT SUMMARY**
@@ -116,8 +118,15 @@ with col_sim2:
     * **Predicted Volume Shift:** `{ (demand_impact * 100):.1f}%`
     * **New Projected Total:** `${new_revenue:,.2f} ({diff_symbol}${revenue_delta:,.2f} vs current)`
     * **Return Risk Level:** `{return_risk}` ({risk_msg})
-    * **{is_optimized}**
     """)
+
+    # DYNAMIC BOTTOM LINE SUMMARY
+    # We use st.info to make this stand out as the key takeaway
+    direction = "increase" if demand_impact > 0 else "decrease"
+    change_type = "extra" if revenue_delta >= 0 else "loss of"
+    
+    st.info(f"**The Bottom Line:** By adjusting our price by **{price_change}%**, we expect sales volume to **{direction}** by **{abs(demand_impact * 100):.1f}%**. This results in an estimated total revenue of **${new_revenue:,.2f}**, which is a **{change_type} ${abs(revenue_delta):,.2f}** compared to today.")
+
     st.markdown("---")
 
     # Revenue Curve Visualization
@@ -138,17 +147,16 @@ st.markdown("---")
 st.markdown("### **RETURN LOGISTICS ANALYSIS**")
 
 st.markdown("""
-**ANALYSIS OVERVIEW:**
-* **Net Revenue Tracking:** Monitors the 'Return-to-Sale' ratio to ensure high volume doesn't lead to high loss.
-* **Quality Benchmarking:** Identifies if specific discount thresholds trigger a spike in quality-related returns.
-* **Category Insights:** Highlights which product groups are most susceptible to impulse-buy returns during sales.
-* **Profit Protection:** Helps set 'Price Floors' to prevent discounting so deep that return costs outweigh the sales gain.
+**GRAPH INTERPRETATION:**
+* **Objective:** Determine if deeper markdowns lead to more frequent returns.
+* **Data Breakdown:** Comparing items that were **Returned (True)** vs. items that were **Kept (False)**.
+* **What to look for:** If the 'True' boxes sit higher on the chart than the 'False' boxes, it shows that deep discounts are causing higher return rates for that category.
 """)
 
 if 'is_returned' in df.columns:
     return_rate = (df['is_returned'].sum() / len(df)) * 100
-    st.info(f"Current Dashboard Insight: Overall return rate is {return_rate:.1f}%. "
-            "Categories with higher markdowns typically show more returns related to quality perception.")
+    st.info(f"**LIVE DATA INSIGHT:** Currently, **{return_rate:.1f}%** of all items in this dataset were returned. "
+            "This percentage updates automatically if you switch datasets or upload new files.")
 
     fig_box = px.box(df, x='category', y='markdown_percentage', color='is_returned',
                      title="HOW MARKDOWNS IMPACT RETURNS BY CATEGORY",
@@ -158,4 +166,4 @@ if 'is_returned' in df.columns:
 
 # --- 7. FOOTER ---
 st.markdown("---")
-st.caption("Developed by Bree Thomas | Data Business Analyst Portfolio | 2024")
+st.caption("Developed by Bree Thomas | Data Business Analyst Portfolio | 2025")
