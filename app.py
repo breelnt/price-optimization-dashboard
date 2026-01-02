@@ -44,9 +44,10 @@ st.markdown("---")
 
 st.markdown("""
 **DASHBOARD GUIDE**
-* **Price Sensitivity:** Calculates how customer demand shifts when prices change.
-* **Revenue Simulation:** Predicts total sales impact based on price adjustments.
-* **The Sweet Spot:** Automatically identifies the price that maximizes total revenue.
+* **Price Sensitivity:** Analyzes how customer demand shifts when you change your prices.
+* **Revenue Simulation:** Use the **Slider** to manually test different pricing scenarios and see predicted sales impact.
+* **Auto-Optimization:** Use the **Optimization Button** to instantly find the price point that maximizes your total revenue.
+* **Return Analysis:** Monitors if deep discounting is causing an increase in product returns.
 """)
 
 # Key Metrics Display
@@ -56,7 +57,7 @@ if 'current_price' in df.columns:
     m1.metric("Current Total Revenue", f"${total_revenue:,.2f}")
     m2.metric("Data Records Analyzed", f"{len(df):,}")
 
-# --- 5. SIMULATION & MAGIC BUTTON LOGIC ---
+# --- 5. SIMULATION & OPTIMIZATION LOGIC ---
 st.markdown("---")
 st.markdown("### **PRICE ELASTICITY SIMULATOR**")
 
@@ -73,14 +74,14 @@ col_sim1, col_sim2 = st.columns([1, 2])
 with col_sim1:
     st.markdown("**SIMULATION CONTROLS**")
     
-    # THE MAGIC BUTTON
-    if st.button("AUTO-SET TO SWEET SPOT"):
+    # THE OPTIMIZATION BUTTON
+    if st.button("SHOW OPTIMIZED PRICE"):
         st.session_state.price_slider = optimal_p
 
     st.caption(f"""
-    **What is the 'Sweet Spot'?** In economics, there is a point where a price is high enough to make a good profit, 
-    but low enough that customers don't walk away. Clicking the button above uses a 'Revenue Peak' formula 
-    to find that exact {optimal_p}% sweet spot for this data.
+    **INSTANT OPTIMIZATION:** * This automatically sets the slider to the exact price point where your volume and profit are perfectly balanced.
+    * **Revenue Maximization:** The formula identifies the peak of your revenue curve based on current market sensitivity.
+    * **Manual Exploration:** Alternatively, use the slider to test specific strategic discounts or seasonal price hikes.
     """)
 
     # THE SLIDER
@@ -97,7 +98,7 @@ with col_sim1:
     new_revenue = total_revenue * (1 + (price_change/100)) * (1 + demand_impact)
     revenue_delta = new_revenue - total_revenue
     
-# Return Risk Logic
+    # Return Risk Logic
     return_risk = "LOW"
     risk_msg = "Stable return patterns expected."
     if price_change < -25:
@@ -115,7 +116,7 @@ with col_sim2:
     * **Predicted Volume Shift:** `{ (demand_impact * 100):.1f}%`
     * **New Projected Total:** `${new_revenue:,.2f} ({diff_symbol}${revenue_delta:,.2f} vs current)`
     * **Return Risk Level:** `{return_risk}` ({risk_msg})
-    * **Strategy Status:** `{is_optimized}`
+    * **{is_optimized}**
     """)
     st.markdown("---")
 
@@ -128,19 +129,20 @@ with col_sim2:
                         title="REVENUE OPTIMIZATION CURVE")
     
     # Visual Indicators on Graph
-    fig_curve.add_vline(x=price_change, line_dash="dash", line_color="red", annotation_text="Current Selection")
-    fig_curve.add_vline(x=optimal_p, line_dash="dot", line_color="green", annotation_text="Mathematical Peak")
+    fig_curve.add_vline(x=price_change, line_dash="dash", line_color="red", annotation_text="Selection")
+    fig_curve.add_vline(x=optimal_p, line_dash="dot", line_color="green", annotation_text="Peak")
     st.plotly_chart(fig_curve, use_container_width=True)
 
 # --- 6. RETURN LOGISTICS ANALYSIS ---
 st.markdown("---")
 st.markdown("### **RETURN LOGISTICS ANALYSIS**")
 
-st.write("""
-**What are we looking at here?** This section tracks the 'Return-to-Sale' relationship. 
-While lower prices can drive a massive spike in sales volume, they often attract 
-one-time shoppers who are more likely to return items. A successful price strategy 
-must balance **high volume** with **low returns** to protect actual profit.
+st.markdown("""
+**ANALYSIS OVERVIEW:**
+* **Net Revenue Tracking:** Monitors the 'Return-to-Sale' ratio to ensure high volume doesn't lead to high loss.
+* **Quality Benchmarking:** Identifies if specific discount thresholds trigger a spike in quality-related returns.
+* **Category Insights:** Highlights which product groups are most susceptible to impulse-buy returns during sales.
+* **Profit Protection:** Helps set 'Price Floors' to prevent discounting so deep that return costs outweigh the sales gain.
 """)
 
 if 'is_returned' in df.columns:
@@ -157,4 +159,3 @@ if 'is_returned' in df.columns:
 # --- 7. FOOTER ---
 st.markdown("---")
 st.caption("Developed by Bree Thomas | Data Business Analyst Portfolio | 2024")
-
