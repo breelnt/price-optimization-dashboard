@@ -77,8 +77,7 @@ st.markdown("### **PRICE ELASTICITY SIMULATOR**")
 elasticity = -1.6 
 optimal_p = round(-50 * (1 + elasticity) / elasticity, 2)
 
-# --- SESSION STATE FIX ---
-# Initialize the slider value in session state so the button can change it
+# Session State Initialization
 if 'current_slider_val' not in st.session_state:
     st.session_state.current_slider_val = 0.0
 
@@ -87,7 +86,7 @@ col_sim1, col_sim2 = st.columns([1, 2])
 with col_sim1:
     st.markdown("**SIMULATION CONTROLS**")
     
-    # THE SLIDER (Note: value is linked to session state)
+    # THE SLIDER
     price_change = st.slider(
         "Target Price Adjustment (%)", 
         min_value=-50.0, 
@@ -96,22 +95,18 @@ with col_sim1:
         value=st.session_state.current_slider_val
     )
     
-    # Keep session state in sync with manual slides
     st.session_state.current_slider_val = price_change
 
     st.markdown("---")
 
     # THE OPTIMIZATION BUTTON
     if st.button("RUN REVENUE OPTIMIZATION"):
-        # Update the session state value
         st.session_state.current_slider_val = optimal_p
-        # Force a rerun to move the slider visually
         st.rerun()
 
     st.caption(f"""
-    **STRATEGIC OPTIMIZATION:** Click the button above to automatically align the slider with the 
-    recommended price point. This identifies the balance where price changes are offset by 
-    volume shifts to reach the highest possible total revenue.
+    **STRATEGIC OPTIMIZATION:** Click the button above to automatically move the slider to the best price point. 
+    This finds the exact balance where we make the most money before customers start buying less.
     """)
     
     # Impact Calculations
@@ -132,15 +127,14 @@ with col_sim2:
     direction = "increase" if demand_impact > 0 else "decrease"
     change_type = "extra" if revenue_delta >= 0 else "loss of"
     
-    # DYNAMIC ONE-SENTENCE SUMMARY
-    st.info(f"""
-    **ONE-SENTENCE SUMMARY (Updates with slider):** By adjusting our price by **{price_change}%**, we expect sales volume to **{direction}** by **{abs(demand_impact * 100):.1f}%**, 
-    resulting in a total revenue of **${new_revenue:,.2f}** (a **{change_type} ${abs(revenue_delta):,.2f}** vs. current).
-    """)
+    # One-Sentence Summary
+    st.info(f"**ONE-SENTENCE SUMMARY (Updates with slider):** By adjusting our price by **{price_change}%**, we expect sales volume to **{direction}** by **{abs(demand_impact * 100):.1f}%**, resulting in total revenue of **${new_revenue:,.2f}** (a **{change_type} ${abs(revenue_delta):,.2f}** vs. current).")
 
+    # Detailed Bullets
     st.markdown(f"""
     * **Target Price Change:** `{price_change}%`
     * **Predicted Volume Shift:** `{ (demand_impact * 100):.1f}%`
+    * **New Projected Total:** `${new_revenue:,.2f} ({"+" if revenue_delta >= 0 else ""}${revenue_delta:,.2f} vs current)`
     * **Return Risk Level:** `{return_risk}` ({risk_msg})
     """)
     st.markdown("---")
@@ -167,6 +161,8 @@ st.markdown("""
 * **Data Breakdown:** Comparing items that were **Returned (True)** vs. items that were **Kept (False)**.
 * **What to look for:** If the 'True' boxes sit higher on the chart than the 'False' boxes, it shows that deep discounts are causing higher return rates for that specific product group.
 """)
+
+
 
 if 'is_returned' in df.columns and 'category' in df.columns:
     return_rate = (df['is_returned'].sum() / len(df)) * 100
